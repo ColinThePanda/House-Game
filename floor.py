@@ -15,6 +15,7 @@ class Floor():
         self.generate_floor(total_floors)
     
     def generate_floor(self, total_floors : int):
+        self.tiles = []
         for x in range(self.size.x):
             for y in range(self.size.y):
                 self.tiles.append(Tile(TileType.BASIC, "Basic Tile", Vector(x, y)))

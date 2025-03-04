@@ -1,1 +1,1 @@
-print_tiles
+game.player.position.x, game.player.position.y - 1)
