@@ -2,6 +2,7 @@ from floor import Floor
 from vector import Vector
 from tile import TileType, Tile
 from typing import List
+import random
 
 class House():
     def __init__(self, floor_size : Vector, total_floors : int):
@@ -16,3 +17,8 @@ class House():
                 self.floors.append(Floor(i, self.size, self.total_floors))
             else:
                 self.floors.append(Floor(i, self.size, self.total_floors, self.floors[i - 1]))
+        
+        floor : Floor = random.choice(self.floors)
+        floor.key = floor.place_tile(TileType.KEY, "Key")
+        floor.key.found = True
+

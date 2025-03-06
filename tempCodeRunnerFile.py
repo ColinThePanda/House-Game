@@ -1,1 +1,1 @@
-game.player.position.x, game.player.position.y - 1)
+__name__

@@ -12,6 +12,7 @@ class Floor():
         self.down_stair : Tile = None
         self.up_stair : Tile = None
         self.vault : Tile = None
+        self.key : Tile = None
         self.generate_floor(total_floors)
     
     def generate_floor(self, total_floors : int):
@@ -56,7 +57,6 @@ class Floor():
             if tile.position.x == position.x and tile.position.y == position.y:
                 tile_index = self.tiles.index(tile)
                 #print("Down Stair")
-                tile.print_info()
                 self.tiles[tile_index] = Tile(TileType.STAIR_DOWN, "Stair Down", position)
                 return self.tiles[tile_index]
         
