@@ -40,7 +40,7 @@ class Floor():
         #print("\n")
         #print(tile.name, tile.type, tile.position.x + 1, tile.position.y + 1)
         tile_index = self.tiles.index(tile)
-        self.tiles[tile_index] = Tile(tile_type, name, tile.position)
+        self.tiles[tile_index] = Tile(tile_type, name, tile.position, False)
         return self.tiles[tile_index]
     
     def place_down_stair(self):

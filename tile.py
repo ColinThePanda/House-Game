@@ -9,7 +9,7 @@ class TileType(Enum):
     KEY = 4
 
 class Tile():
-    def __init__(self, tile_type : TileType, name : str, position : Vector = None):
+    def __init__(self, tile_type : TileType, name : str, position : Vector = None, found : bool = False):
         self.type : TileType = tile_type
         self.name : str = name
         self.position : Vector = position

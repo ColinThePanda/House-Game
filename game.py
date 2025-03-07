@@ -10,10 +10,11 @@ from rich import box
 from rich import print
 
 class Game():
-    def __init__(self, floor_size : Vector, floors : int):
+    def __init__(self, floor_size : Vector, floors : int, reveal_diagonals : bool = False):
         self.house = House(floor_size, floors)
         self.player = Player(self.get_player_start())
         self.current_floor : int = 1
+        self.reveal_diagonals : bool = reveal_diagonals
         
         # Reveal tiles around the player's starting position
         self.reveal_tiles_around_player()
@@ -33,8 +34,8 @@ class Game():
             return Vector(0, 0)
     
     def move_player(self, position : Vector):
-        if position.x < 0 or position.x >= self.house.size.x or position.y < 0 or position.y >= self.house.size.y:
-            return
+        #if not self.is_valid_move(position):
+        #    return
         self.player.move(position)
         
         # Reveal tiles around the player after moving
@@ -64,7 +65,12 @@ class Game():
                 current_floor.tiles[tile_index] = Tile(TileType.BASIC, "Basic Tile", current_floor.key.position)
                 current_floor.key = None
                 self.player.has_key = True
-        
+                self.reveal_tiles_around_player()
+    
+    def is_valid_move(self, position : Vector):
+        if position.x < 0 or position.x >= self.house.size.x or position.y < 0 or position.y >= self.house.size.y:
+            return False
+        return True
     
     def move_floor(self, floor : int):
         if floor < 1 or floor > self.house.total_floors:
@@ -91,7 +97,8 @@ class Game():
             # Reveal adjacent tiles (up, down, left, right)
             elif (
                 (tile.position.x == player_x and abs(tile.position.y - player_y) == 1) or  # up/down
-                (tile.position.y == player_y and abs(tile.position.x - player_x) == 1)     # left/right
+                (tile.position.y == player_y and abs(tile.position.x - player_x) == 1)or   # left/right
+                ((abs(tile.position.x - player_x) == 1 and abs(tile.position.y - player_y) == 1) and self.reveal_diagonals)  # diagonals
             ):
                 tile.found = True
     

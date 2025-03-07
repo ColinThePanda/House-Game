@@ -7,8 +7,8 @@ import os
 import sys
 from rich.console import Console
 from rich.text import Text
-from rich import print
 import time
+
 
 def game_loop(game : Game):
     
@@ -85,8 +85,6 @@ def check_win(game : Game):
             return True
             if game.player.has_key:
                 return True
-    else:
-        print("no vault")
     return False
 
 def clear_console():

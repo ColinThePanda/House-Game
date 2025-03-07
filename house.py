@@ -20,5 +20,4 @@ class House():
         
         floor : Floor = random.choice(self.floors)
         floor.key = floor.place_tile(TileType.KEY, "Key")
-        floor.key.found = True
 
