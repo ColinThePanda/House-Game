@@ -8,16 +8,21 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 from rich import print
+from data_manager import DataManager
 
 class Game():
     def __init__(self, floor_size : Vector, floors : int, reveal_diagonals : bool = False):
-        self.house = House(floor_size, floors)
-        self.player = Player(self.get_player_start())
+        self.house : House = House(floor_size, floors)
+        self.data_manager = DataManager()
+        self.player : Player = Player(self.get_player_start(), self.data_manager.load_data())
         self.current_floor : int = 1
         self.reveal_diagonals : bool = reveal_diagonals
         
         # Reveal tiles around the player's starting position
         self.reveal_tiles_around_player()
+    
+    def save_data(self):
+        self.data_manager.save_data(self.player.data)
     
     def get_player_start(self):
         tiles = []

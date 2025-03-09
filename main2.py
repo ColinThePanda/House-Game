@@ -9,10 +9,9 @@ from rich.console import Console
 from rich.text import Text
 import time
 import keyboard
+import math
 
 def game_loop(game : Game):
-    console = Console()
-
     options = game.get_options()
 
     # Wait for a valid key press before continuing
@@ -82,10 +81,20 @@ def game_loop(game : Game):
  '----------------'  '----------------'  '----------------'   '----------------'  '----------------'  '----------------'  '----------------'  
 """)
         game.print_floor(game.current_floor)
-        time.sleep(5)
-        return False
+        gold = calculate_gold(game)
+        print("gold gained", gold)
+        game.player.data.gold += gold
+        game.save_data()
+        print("current gold", game.player.data.gold)
+        input()
+        return False, 0.0
 
     return True, interval
+
+def calculate_gold(game):
+    total_tiles = game.house.total_floors * game.house.floors[0].size.x * game.house.floors[0].size.y
+    return round((10 + 5 * math.log2(1 + total_tiles) + (total_tiles / 4) * (1 - math.exp(-total_tiles / 100))) * (1 - (int(game.reveal_diagonals)) * 0.5))
+    #((math.log((game.house.total_floors ** (9/5)) * game.house.size.x * game.house.size.y) ** 3))/1.5 * (1 - (int(game.reveal_diagonals)) * 0.5)
 
 def check_win(game : Game):
     current_floor : Floor = game.house.floors[game.current_floor - 1]
@@ -156,7 +165,7 @@ def get_game():
         time.sleep(3)
     return game
 
-def main():
+def start_game():
     game = get_game()
     running = True
     interval = 0.0
@@ -166,6 +175,23 @@ def main():
         print_choices(game.get_options())
         time.sleep(interval)
         running, interval = game_loop(game)
+    game.save_data()
+
+def start_shop():
+    player = player()
+
+def get_start_choice():
+    choice = int(input("Do you want to 1. Play the game, 2. Go to the shop(unfinished): "))
+    if choice == 1:
+        start_game()
+    elif choice == 2:
+        start_shop()
+    else:
+        print("That is not one of the options")
+        get_start_choice()
+
+def main():
+    get_start_choice()
 
     
 if __name__ == "__main__":
