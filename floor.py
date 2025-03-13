@@ -13,6 +13,7 @@ class Floor():
         self.up_stair : Tile = None
         self.vault : Tile = None
         self.key : Tile = None
+        self.discovered : bool = False
         self.generate_floor(total_floors)
     
     def generate_floor(self, total_floors : int):

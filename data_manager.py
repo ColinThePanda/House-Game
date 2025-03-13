@@ -6,7 +6,7 @@ class DataManager:
     def __init__(self):
         pass
 
-    def load_data(self, file_path : str="data.GAMEDATA"):
+    def load_data(self, file_path : str="data.GAMEDATA") -> SaveData:
         if not os.path.exists(file_path):
             self.create_data_file(file_path=file_path)
 

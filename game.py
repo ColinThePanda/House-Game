@@ -9,23 +9,36 @@ from rich.table import Table
 from rich import box
 from rich import print
 from data_manager import DataManager
+from typing import List, Dict
+from effect import *
+from typing import List, Dict, Optional
+from rich.console import Console
+from rich.table import Table
+from rich import box
+from rich import print
 
 class Game():
-    def __init__(self, floor_size : Vector, floors : int, reveal_diagonals : bool = False):
-        self.house : House = House(floor_size, floors)
-        self.data_manager = DataManager()
-        self.player : Player = Player(self.get_player_start(), self.data_manager.load_data())
-        self.current_floor : int = 1
-        self.reveal_diagonals : bool = reveal_diagonals
-        
-        # Reveal tiles around the player's starting position
-        self.reveal_tiles_around_player()
+    def __init__(self, floor_size : Vector, floors : int):
+            self.house: House = House(floor_size, floors)
+            self.data_manager = DataManager()
+            self.data = self.data_manager.load_data()
+            self.player: Player = Player(self.get_player_start(), self.data.items)
+            self.current_floor: int = 1
+            self.reveal_diagonals: bool = False
+            self.gold_multiplier = 1.0  # Default multiplier
+            
+            # Apply effects from items
+            self.apply_item_effects()
+            
+            # Reveal tiles around the player's starting position
+            self.reveal_tiles_around_player()
+
     
     def save_data(self):
-        self.data_manager.save_data(self.player.data)
+        self.data_manager.save_data(self.data)
     
     def get_player_start(self):
-        tiles = []
+        tiles : List[Tile] = []
         # Only check the first floor
         first_floor = self.house.floors[0]
         for tile in first_floor.tiles:
@@ -87,6 +100,7 @@ class Game():
             self.player.can_move_up = True
             self.player.can_move_down = False
         self.current_floor = floor
+        self.house.floors[self.current_floor - 1].discovered = True
         self.reveal_tiles_around_player()
     
     def reveal_tiles_around_player(self):
@@ -107,8 +121,30 @@ class Game():
             ):
                 tile.found = True
     
+    def apply_item_effects(self):
+        """Apply effects from all player items."""
+        # Reset effect-based attributes before applying effects
+        self.player.can_teleport = False
+        
+        # Apply effects that target the player or game
+        for item in self.player.items:
+            for effect in item.effects:
+                if effect.type == EffectType.PLAYER:
+                    effect.apply(self.player)
+                elif effect.type == EffectType.GAME:
+                    effect.apply(self)
+        
+        # After applying effects, update game state accordingly
+        self.reveal_tiles_around_player()
+
+    def update_gold_calculation(self, base_gold):
+        """Apply gold multiplier from items."""
+        if hasattr(self, 'gold_multiplier'):
+            return int(base_gold * self.gold_multiplier)
+        return base_gold
+    
     def get_options(self):
-        options = []
+        options : List[str] = []
         current_floor = self.house.floors[self.current_floor - 1]
         if self.player.position.y < current_floor.size.y - 1:
             options.append("up")
@@ -124,12 +160,65 @@ class Game():
             options.append("move down")
         options.append("exit")
         return options
+
+    def get_options(self):
+        """Get all valid movement options for the current player position."""
+        options: List[str] = []
+        current_floor = self.house.floors[self.current_floor - 1]
         
+        # Cardinal directions
+        if self.player.position.y < current_floor.size.y - 1:
+            options.append("up")
+        if self.player.position.y > 0:
+            options.append("down")
+        if self.player.position.x > 0:
+            options.append("left")
+        if self.player.position.x < current_floor.size.x - 1:
+            options.append("right")
+        
+        # Floor movement
+        if self.player.can_move_up:
+            options.append("move up")
+        if self.player.can_move_down:
+            options.append("move down")
+        
+        # Teleport option if player has the ability
+        if hasattr(self.player, 'can_teleport') and self.player.can_teleport:
+            options.append("teleport")
+        
+        options.append("exit")
+        return options
+    
+    def get_current_floor(self):
+        """Helper method to get the current floor object."""
+        return self.house.floors[self.current_floor - 1]
+    
+    def get_discovered_floors(self):
+        """Get list of all discovered floors."""
+        return [floor for floor in self.house.floors if floor.discovered]
+    
+    def is_win_condition_met(self):
+        """Check if the player has won."""
+        current_floor = self.get_current_floor()
+        if current_floor.vault:
+            if (self.player.position.x == current_floor.vault.position.x and 
+                self.player.position.y == current_floor.vault.position.y):
+                if self.player.has_key:
+                    return True
+        return False
+    
+    def process_win(self):
+        """Process win condition and add gold."""
+        from main import calculate_gold  # Import calculation function
+        gold_earned = calculate_gold(self)
+        self.data.gold += gold_earned
+        self.save_data()
+        return gold_earned
     
     def print_floor(self, floor : int):
         console = Console()
 
-        TILE_COLORS = {
+        TILE_COLORS : Dict[TileType, str] = {
             TileType.BASIC: "white",
             TileType.STAIR_UP: "green",
             TileType.STAIR_DOWN: "red",
@@ -137,7 +226,7 @@ class Game():
             TileType.KEY: "#FFAE42",
         }
 
-        TILE_SYMBOLS = {
+        TILE_SYMBOLS : Dict[TileType, str] = {
             TileType.BASIC: "·",      # Middle dot for basic tiles
             TileType.STAIR_UP: "↑",   # Up arrow for stairs up
             TileType.STAIR_DOWN: "↓", # Down arrow for stairs down
@@ -145,8 +234,8 @@ class Game():
             TileType.KEY: "K",        # K for key
         }
 
-        floor = self.house.floors[floor-1]
-        table = Table(title=f"Floor #{floor.index + 1}", box=box.HEAVY_EDGE)
+        floor : Floor = self.house.floors[floor-1]
+        table : Table = Table(title=f"Floor #{floor.index + 1}", box=box.HEAVY_EDGE)
 
         # Add column headers (including an extra for row numbers)
         table.add_column("#", justify="center", style="bold")

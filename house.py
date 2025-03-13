@@ -15,6 +15,7 @@ class House():
         for i in range(self.total_floors):
             if i == 0:
                 self.floors.append(Floor(i, self.size, self.total_floors))
+                self.floors[0].discovered = True
             else:
                 self.floors.append(Floor(i, self.size, self.total_floors, self.floors[i - 1]))
         
