@@ -26,14 +26,18 @@ from ui import (
     handle_shop_interface,
     display_win_screen
 )
+from ascii_art import ascii_main
 
 def calculate_gold(game: Game):
     house: House = game.house
     total_tiles: int = house.total_floors * house.floors[0].size.x * house.floors[0].size.y
-    base_gold = round((10 + 5 * math.log2(1 + total_tiles) + (total_tiles / 4) * (1 - math.exp(-total_tiles / 100))) * (1 - (int(game.reveal_diagonals)) * 0.5))
+
+    gold_per_tile = 0.35
+
+    base_gold = round(total_tiles * gold_per_tile)
     
-    # Apply gold multiplier from items
     return game.update_gold_calculation(base_gold)
+
 
 def check_win(game: Game):
     current_floor: Floor = game.house.floors[game.current_floor - 1]
@@ -45,10 +49,7 @@ def check_win(game: Game):
 
 def start_game():
     game : Game = game_setup_interface()
-    game_won : bool = run_game_interface(game)
-    if game_won: 
-        pass
-        #display_win_screen(game, 5)
+    run_game_interface(game)
     game.save_data()
 
 def start_shop():
@@ -58,6 +59,7 @@ def start_shop():
     shop.data_manager.save_data(shop.data)
 
 def main():
+    main_menu()
     while True:
         #main_menu()
         # Display main menu
@@ -68,11 +70,7 @@ def main():
         ]
         
         choice = show_selection_interface(
-            title="""[bold blue]
-╔═╗╦ ╦╔═╗╦  ╔═╗╦═╗╔═╗╦═╗  ╦ ╦╔═╗╦ ╦╔═╗╔═╗
-║╣ ╚╦╝╠═╝║  ║ ║╠╦╝║╣ ╠╦╝  ╠═╣║ ║║ ║╚═╗║╣ 
-╚═╝ ╩ ╩  ╩═╝╚═╝╩╚═╚═╝╩╚═  ╩ ╩╚═╝╚═╝╚═╝╚═╝
-[/bold blue]""",
+            title=ascii_main,
             options=menu_options,
             initial_index=0,
             header_text="Welcome to Explorer House! What would you like to do?",

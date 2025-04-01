@@ -22,14 +22,13 @@ class Floor():
             for y in range(self.size.y):
                 self.tiles.append(Tile(TileType.BASIC, "Basic Tile", Vector(x, y)))
         
+        if total_floors != 1:
+            if self.index != 0:
+                self.down_stair = self.place_down_stair()
+            if self.index < total_floors - 1:
+                self.up_stair = self.place_tile(TileType.STAIR_UP, "Stair Up")
         if self.index == total_floors - 1:
             self.vault = self.place_tile(TileType.VAULT, "Vault")
-        if total_floors == 1:
-            return
-        if self.index != 0:
-            self.down_stair = self.place_down_stair()
-        if self.index < total_floors - 1:
-            self.up_stair = self.place_tile(TileType.STAIR_UP, "Stair Up")
     
     def place_tile(self, tile_type : TileType, name : str):
         tiles = []

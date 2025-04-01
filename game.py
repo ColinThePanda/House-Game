@@ -142,24 +142,6 @@ class Game():
         if hasattr(self, 'gold_multiplier'):
             return int(base_gold * self.gold_multiplier)
         return base_gold
-    
-    def get_options(self):
-        options : List[str] = []
-        current_floor = self.house.floors[self.current_floor - 1]
-        if self.player.position.y < current_floor.size.y - 1:
-            options.append("up")
-        if self.player.position.y > 0:
-            options.append("down")
-        if self.player.position.x > 0:
-            options.append("left")
-        if self.player.position.x < current_floor.size.x - 1:
-            options.append("right")
-        if self.player.can_move_up:
-            options.append("move up")
-        if self.player.can_move_down:
-            options.append("move down")
-        options.append("exit")
-        return options
 
     def get_options(self):
         """Get all valid movement options for the current player position."""

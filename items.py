@@ -37,7 +37,7 @@ class GoldFinderItem(Item):
     def __init__(self):
         gold_effect = GameEffect(
             name="Gold Finder", 
-            description="Increases gold rewards by 25%",
+            description="Increases gold rewards by 25%(stackable)",
             gold_multiplier=1.25
         )
         super().__init__(
@@ -69,7 +69,7 @@ class TeleporterItem(Item):
             custom_effect=teleport_ability  # Use the function defined at module level
         )
         super().__init__(
-            cost=400, 
+            cost=500, 
             name="Teleporter", 
             description="A device allowing instant travel between floors one has already visited",
             effects=[teleport_effect]

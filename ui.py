@@ -9,6 +9,7 @@ from rich.text import Text
 from vector import Vector
 from typing import List, Dict, Any, Callable, Optional, Tuple, Union
 from game import Game
+from ascii_art import ascii_shop, ascii_main, ascii_win
 
 def clear_console():
     """Clear the console screen based on the operating system."""
@@ -151,7 +152,7 @@ def show_selection_interface(
         clear_console()
         
         # Display title and header
-        console.print(f"[bold]{title}[/bold]")
+        console.print(title)
         if header_text:
             console.print(header_text)
         
@@ -304,7 +305,7 @@ def handle_player_input(game, interval=0.15):
     
     return True, interval
 
-def show_teleport_ui(game):
+def show_teleport_ui(game : Game):
     """
     Show teleportation floor selection UI using the generic selection interface.
     
@@ -318,17 +319,17 @@ def show_teleport_ui(game):
     floor_options = []
     
     for floor in game.house.floors:
-        if hasattr(floor, 'discovered') and floor.discovered:
-            name = f"Floor {floor.index + 1}"
-            if floor.index + 1 == game.current_floor:
-                name += " (current)"
-            
-            floor_options.append(SelectionOption(
-                name=name,
-                description=f"Floor {floor.index + 1}",
-                value=floor.index + 1,  # Return 1-based floor number
-                additional_info={"is_current": floor.index + 1 == game.current_floor}
-            ))
+        #if (hasattr(floor, 'discovered') and floor.discovered) or floor.index + 1 == game.current_floor + 1:
+        name = f"Floor {floor.index + 1}"
+        if floor.index + 1 == game.current_floor:
+            name += " (current)"
+        
+        floor_options.append(SelectionOption(
+            name=name,
+            description=f"Floor {floor.index + 1}",
+            value=floor.index + 1,  # Return 1-based floor number
+            additional_info={"is_current": floor.index + 1 == game.current_floor}
+        ))
     
     if not floor_options:
         console = Console()
@@ -356,7 +357,6 @@ def show_teleport_ui(game):
         cancel_allowed=True
     )
 
-# Continuing from where the function was cut off
 def handle_shop_interface(shop, debug=False):
     """
     Show shop interface using the generic selection interface.
@@ -368,16 +368,6 @@ def handle_shop_interface(shop, debug=False):
     Returns:
         bool: Whether the shop should continue running
     """
-    # Convert shop items to selection options
-    item_options = []
-    for item in shop.items:
-        item_options.append(SelectionOption(
-            name=item.name,
-            description=item.get_full_description(),
-            value=item,
-            additional_info={"cost": item.cost}
-        ))
-    
     # Custom header display function to show gold
     def display_header(console : Console, selected_index, options):
         console.print(f"[yellow bold]Gold: {shop.data.gold}[/yellow bold]")
@@ -400,34 +390,22 @@ def handle_shop_interface(shop, debug=False):
         
         console.print("\n[bold]Available Items:[/bold]")
     
-    # Custom action to handle purchase
+    # Custom action to handle purchase using buy_item function
     def purchase_action(selected_option, index):
         item = selected_option.value
         
-        # Check if player can afford the item
-        if shop.data.gold >= item.cost or debug:
-            if not debug:
-                shop.data.gold -= item.cost
-            
-            # Add item to inventory
-            shop.data.items.append(item)
-            
-            # Remove from shop
-            shop.items.remove(item)
-            
-            console = Console()
-            console.print(f"\n[green bold]Purchased {item.name}![/green bold]")
+        # Use the buy_item function directly
+        purchase_successful = shop.buy_item(item, debug)
+        
+        # If purchase was successful, no need to return anything - we'll refresh the interface
+        if purchase_successful:
             time.sleep(1)
-            
-            # Return None to continue shopping
-            return None
         else:
-            console = Console()
-            console.print(f"\n[red bold]Not enough gold to purchase {item.name}.[/red bold]")
+            # If purchase failed (not enough gold or item not available)
             time.sleep(1)
-            
-            # Return None to continue shopping
-            return None
+        
+        # Return None to continue shopping
+        return None
     
     # Additional footer text with controls
     footer_text = "[R] Refresh shop | [Esc] Exit shop"
@@ -461,15 +439,8 @@ def handle_shop_interface(shop, debug=False):
     
     # Handle shop interface
     while True:
-        # Need to rebuild options in case inventory changed
-        item_options = []
-        for item in shop.items:
-            item_options.append(SelectionOption(
-                name=item.name,
-                description=item.get_full_description(),
-                value=item,
-                additional_info={"cost": item.cost}
-            ))
+        # Convert shop items to selection options
+        item_options = shop.get_shop_items_as_options()
         
         # Handle empty shop
         if not item_options:
@@ -492,7 +463,7 @@ def handle_shop_interface(shop, debug=False):
         
         # Show selection interface
         result = show_selection_interface(
-            title="Shop",
+            title=ascii_shop,
             options=item_options,
             initial_index=0,
             header_text=None,  # We're using custom display
@@ -523,7 +494,6 @@ def handle_shop_interface(shop, debug=False):
                 elif key == "esc":
                     return False
                 time.sleep(0.2)
-
 
 def run_game_interface(game):
     """
@@ -600,23 +570,12 @@ def display_win_screen(game : Game, seconds : int, gold_earned : int):
     """
     clear_console()
     
+    console = Console()
+
     # Display win ASCII art
-    print("""
- .----------------.  .----------------.  .----------------.   .----------------.  .----------------.  .-----------------. .----------------. 
-| .--------------. || .--------------. || .--------------. | | .--------------. || .--------------. || .--------------. || .--------------. |
-| |  ____  ____  | || |     ____     | || | _____  _____ | | | | _____  _____ | || |     _____    | || | ____  _____  | || |      _       | |
-| | |_  _||_  _| | || |   .'    `.   | || ||_   _||_   _|| | | ||_   _||_   _|| || |    |_   _|   | || ||_   \|_   _| | || |     | |      | |
-| |   \ \  / /   | || |  /  .--.  \  | || |  | |    | |  | | | |  | | /\ | |  | || |      | |     | || |  |   \ | |   | || |     | |      | |
-| |    \ \/ /    | || |  | |    | |  | || |  | '    ' |  | | | |  | |/  \| |  | || |      | |     | || |  | |\ \| |   | || |     | |      | |
-| |    _|  |_    | || |  \  `--'  /  | || |   \ `--' /   | | | |  |   /\   |  | || |     _| |_    | || | _| |_\   |_  | || |     |_|      | |
-| |   |______|   | || |   `.____.'   | || |    `.__.'    | | | |  |__/  \__|  | || |    |_____|   | || ||_____|\____| | || |     (_)      | |
-| |              | || |              | || |              | | | |              | || |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' | | '--------------' || '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'   '----------------'  '----------------'  '----------------'  '----------------'  
-""")
+    console.print(ascii_win)
     
     # Display game summary
-    console = Console()
     #game.print_floor(game.current_floor)
     
     console.print(f"[yellow bold]Gold earned: {gold_earned}[/yellow bold]")
@@ -721,17 +680,15 @@ def main_menu():
     Returns:
         None
     """
-    running = True
+
+    clear_console()
+    console = Console()
     
-    while running:
-        clear_console()
-        console = Console()
-        
-        # Display title
-        console.print("""
-[bold blue]
-╔═╗╦ ╦╔═╗╦  ╔═╗╦═╗╔═╗╦═╗  ╦ ╦╔═╗╦ ╦╔═╗╔═╗
-║╣ ╚╦╝╠═╝║  ║ ║╠╦╝║╣ ╠╦╝  ╠═╣║ ║║ ║╚═╗║╣ 
-╚═╝ ╩ ╩  ╩═╝╚═╝╩╚═╚═╝╩╚═  ╩ ╩╚═╝╚═╝╚═╝╚═╝
-[/bold blue]
+    # Display title
+    console.print(f"""{ascii_main}
+
+[white]Press any key to play...[/white]
+
 """)
+
+    keyboard.read_key()
