@@ -36,7 +36,7 @@ def calculate_gold(game: Game):
 
     base_gold = round(total_tiles * gold_per_tile)
     
-    return game.update_gold_calculation(base_gold)
+    return game.update_gold_calculation(base_gold) - 1
 
 
 def check_win(game: Game):
